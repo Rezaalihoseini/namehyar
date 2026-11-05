@@ -16,3 +16,6 @@ keystore.properties
 
 # Test output
 ui-test-out/
+
+# The installable file people download
+!release/*.apk
