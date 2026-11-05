@@ -440,3 +440,28 @@ details.more .inner { display: grid; gap: 10px; padding: 0 12px 12px; }
 #toast.show { opacity: 1; transform: none; }
 
 .busy { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 70; display: flex; align-items: center; justify-content: center; background: var(--veil); font-weight: 600; }
+
+/* Accessible app controls; print geometry in page.css remains in real units. */
+:where(button, input, select, textarea, [contenteditable], [tabindex]):focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+:root[data-ui-size="large"] body { font-size: 18px; }
+:root[data-ui-size="large"] :is(.input, .textarea, .editor, .btn, .chip, .seg button) { font-size: 18px; }
+:root[data-ui-size="large"] :is(.mini-label, .note, .template-row small) { font-size: 15px; }
+.form-grid > *, .compose-body > *, .image-field > *, .seg > * { min-width: 0; }
+.sheet { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.sheet:focus { outline: none; }
+@media (pointer: coarse) {
+  .icon-btn { min-width: 44px; min-height: 44px; }
+  :is(.btn.small, .chip, .seg button) { min-height: 44px; }
+}
+@media (max-width: 380px) {
+  .bottombar { gap: 6px; padding-inline: 8px; }
+  .bottombar .btn { padding-inline: 8px; gap: 4px; font-size: 13px; }
+  .image-field { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+.move-step { width: 118px; flex: none; font-size: 12px; min-height: 40px; }

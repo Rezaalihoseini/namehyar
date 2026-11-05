@@ -218,17 +218,17 @@ try {
   `);
   check('a backup restores every letter', backup.kind === 'namehyar-backup' && backup.after === backup.before, backup);
 
-  /* ---------- A font file ---------- */
+  /* ---------- A redistributable font fixture (the B fonts are not in this repo) ---------- */
   const font = await page.evaluate(`
     const { installFont, readFontInfo } = await import('/app/src/main/assets/web/js/fonts.js');
     const { allFonts } = await import('/app/src/main/assets/web/js/model.js');
-    const res = await fetch('/app/src/main/assets/web/fonts/BZar.ttf');
+    const res = await fetch('/app/src/main/assets/web/fonts/Vazirmatn-Regular.ttf');
     const blob = await res.blob();
     const info = readFontInfo(new Uint8Array(await blob.arrayBuffer()));
     const family = await installFont(new File([blob], 'x.ttf'), window.__app.settings);
     return { info, family, listed: allFonts() };
   `);
-  check('a font file is read and added', font.family === 'B Zar' && Math.abs(font.info.ratio - 1.666) < 0.01, font);
+  check('a font file is read and added', font.family === 'Vazirmatn' && Math.abs(font.info.ratio - 1.709) < 0.01 && font.listed.includes(font.family), font);
 
   /* ---------- Opening a Word file ---------- */
   if (wordFile) {

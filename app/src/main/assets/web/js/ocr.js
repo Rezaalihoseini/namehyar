@@ -168,13 +168,15 @@ export function cleanPage(canvas) {
     }
   }
   const paperAt = (x, y) => {
-    const fx = Math.min(cw - 1.001, Math.max(0, x / cell - 0.5));
-    const fy = Math.min(ch - 1.001, Math.max(0, y / cell - 0.5));
+    const fx = Math.min(cw - 1, Math.max(0, x / cell - 0.5));
+    const fy = Math.min(ch - 1, Math.max(0, y / cell - 0.5));
     const ix = Math.floor(fx);
     const iy = Math.floor(fy);
+    const nextX = Math.min(cw - 1, ix + 1);
+    const nextY = Math.min(ch - 1, iy + 1);
     const ax = fx - ix;
     const ay = fy - iy;
-    return (paper[iy * cw + ix] * (1 - ax) + paper[iy * cw + ix + 1] * ax) * (1 - ay) + (paper[(iy + 1) * cw + ix] * (1 - ax) + paper[(iy + 1) * cw + ix + 1] * ax) * ay;
+    return (paper[iy * cw + ix] * (1 - ax) + paper[iy * cw + nextX] * ax) * (1 - ay) + (paper[nextY * cw + ix] * (1 - ax) + paper[nextY * cw + nextX] * ax) * ay;
   };
   for (let y = 0, j = 0, i = 0; y < h; y++) {
     for (let x = 0; x < w; x++, j++, i += 4) {
@@ -201,11 +203,14 @@ export function cleanPage(canvas) {
 const pngOf = async (canvas) => (await new Promise((done) => canvas.toBlob(done, 'image/png'))).arrayBuffer();
 
 /** A picture turned about its middle, on white. A quarter or half turn changes its shape. */
-function turned(canvas, radians) {
+export function turned(canvas, radians) {
   const quarter = Math.abs(Math.abs(radians) - Math.PI / 2) < 0.01;
   const out = document.createElement('canvas');
-  out.width = quarter ? canvas.height : canvas.width;
-  out.height = quarter ? canvas.width : canvas.height;
+  const c = Math.abs(Math.cos(radians));
+  const s = Math.abs(Math.sin(radians));
+  // Keep writing near the edges: rotating inside the old rectangle clips it.
+  out.width = quarter ? canvas.height : Math.ceil(canvas.width * c + canvas.height * s - 1e-8);
+  out.height = quarter ? canvas.width : Math.ceil(canvas.height * c + canvas.width * s - 1e-8);
   const ctx = out.getContext('2d');
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, out.width, out.height);
@@ -220,8 +225,8 @@ function turned(canvas, radians) {
  * How far to turn a page so its lines lie level, in radians. Tried by sliding the rows of ink: at the right slant they pile up into sharp
  * lines with white between them. The engine's own figure was off by a quarter of a degree on pages that were straight.
  */
-function slantOf(clean) {
-  const small = scaled(clean, 700 / clean.width);
+export function slantOf(clean) {
+  const small = scaled(clean, Math.min(1, 700 / clean.width));
   const w = small.width;
   const h = small.height;
   const data = small.getContext('2d').getImageData(0, 0, w, h).data;
@@ -236,7 +241,7 @@ function slantOf(clean) {
     }
   }
   if (xs.length < 200) return 0;
-  const margin = Math.ceil(w * 0.2);
+  const margin = Math.ceil(w * 0.3);
   const rows = new Int32Array(h + margin * 2);
   const score = (slope) => {
     rows.fill(0);
@@ -259,7 +264,7 @@ function slantOf(clean) {
     }
     return best;
   };
-  const coarse = search(-0.12, 0.12, 0.004);
+  const coarse = search(-0.27, 0.27, 0.004);
   const fine = search(coarse.slope - 0.004, coarse.slope + 0.004, 0.0005);
   // Sliding by this slope levels the rows: turning the page by it does the same.
   return score(0) * 1.02 < fine.value ? Math.atan(fine.slope) : 0;
@@ -361,6 +366,8 @@ const HAS_LETTER = /[ء-ۓA-Za-z0-9۰-۹]/;
 /** What the engine confuses in Persian, which nothing else can mean. */
 export function fixWord(raw) {
   let word = raw
+    .normalize('NFKC')
+    .replace(/[\u200e\u200f]/g, '')
     .replace(/[يى]/g, 'ی')
     .replace(/ك/g, 'ک')
     .replace(/[٠-٩]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0x660 + 0x6f0))
@@ -717,6 +724,18 @@ const INK_TO_WIDTH = 1.02;
 /** Strokes thicker than the page's usual by this much make a line bold. Measured on letters in three fonts, as scans, copies and photos. */
 const BOLD_STROKE = 1.25;
 
+// Scan contrast and font families change the gap between regular and bold.
+// Use a distinct heavier cluster when there is evidence for one, otherwise
+// retain the conservative ratio (a uniformly heavy page is not all bold).
+export function boldLines(inks) {
+  const usual = median(inks.map((ink) => ink.weight));
+  const heavy = inks.map((ink) => ink.weight).filter((weight) => weight > usual * 1.15);
+  const threshold = heavy.length >= 2 && heavy.length < inks.length / 2
+    ? Math.min(usual * BOLD_STROKE, (usual + median(heavy)) / 2)
+    : usual * BOLD_STROKE;
+  return inks.map((ink) => ink.weight > threshold);
+}
+
 const median = (values) => {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[sorted.length >> 1] || 0;
@@ -777,7 +796,7 @@ function inkOfLines(clean, lines) {
 /** How large B Nazanin must be for a line's words to be as wide as they are on the page, whatever font they are in. */
 function sizeFromWidths(line, bold, scale) {
   const ruler = sizeFromWidths.ruler || (sizeFromWidths.ruler = document.createElement('canvas').getContext('2d'));
-  ruler.font = `${bold ? 'bold ' : ''}100px "B Nazanin"`;
+  ruler.font = `${bold ? 'bold ' : ''}100px "B Nazanin","Tinos","Vazirmatn",serif`;
   const sizes = line.words.filter((w) => w.text.length >= 4 && !/[0-9۰-۹]/.test(w.text)).map((w) => ((w.box[2] - w.box[0]) * scale) / ((ruler.measureText(w.text).width / 100) * MM_PER_PT));
   return sizes.length ? median(sizes) * INK_TO_WIDTH : 0;
 }
@@ -912,8 +931,7 @@ export async function readPage(engine, whole, widthMm, makePicture) {
 
   await Promise.all([document.fonts.load('100px "B Nazanin"', 'سلام'), document.fonts.load('bold 100px "B Nazanin"', 'سلام')]).catch(() => {});
   const inks = inkOfLines(clean, lines);
-  const usualWeight = median(inks.map((ink) => ink.weight));
-  const bolds = inks.map((ink) => ink.weight > usualWeight * BOLD_STROKE);
+  const bolds = boldLines(inks);
   const sizes = lines.map((line, n) => sizeFromWidths(line, bolds[n], scale));
   // Lines near the usual size are that size.
   const mainSize = median(sizes.filter(Boolean)) || 14;

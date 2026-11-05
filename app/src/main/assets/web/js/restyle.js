@@ -63,6 +63,11 @@ export function restyleCell(cell, patch, size) {
   const look = lookFrom(patch);
   cell.paras = cell.paras.map((p, i) => {
     let next = { ...p, runs: applyLook(p.runs, look) };
+    // Returning to the inherited size must return to inheritance too. Keeping
+    // an explicit size changes later table-wide formatting and reset.
+    if (patch.size === size && first.paras[i]?.runs.every((run) => run.size === undefined)) {
+      next.runs = clearLook(next.runs, ['size']);
+    }
     if (patch.align) {
       // Alignment replaces the distance from the edge that kept the words in place.
       const { indent, ...rest } = next;

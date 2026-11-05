@@ -182,16 +182,22 @@ function touch() {
   scheduleLive();
 }
 
-const syncBody = debounce(() => {
+const syncBody = () => {
+  if (!L()) return;
   L().body = serializeEditor(editor);
   L().bodyHtml = editorHtml(editor);
+  L().bodyDirty = bodyDirty;
   if (!L().attachmentManual) {
     syncAttachment(L());
     attachmentSeg.setValue(L().attachment);
   }
   touch();
   paintNextBlank();
-}, 180);
+};
+// Snapshot the current input synchronously; only painting and the final archive
+// write are delayed. This includes the last input of an IME composition.
+syncBody.flush = syncBody;
+document.addEventListener('namehyar-flush-editor', () => { if (!root.hidden) syncBody(); });
 
 function paintLive() {
   if (root.hidden || !L()) return;

@@ -42,7 +42,10 @@ export async function getDoc(coll, id) {
 }
 
 export async function putDoc(coll, id, doc) {
-  if (N) return N.dbPut(coll, id, JSON.stringify(doc));
+  if (N) {
+    if (N.dbPut(coll, id, JSON.stringify(doc)) === false) throw new Error('Device storage write failed');
+    return;
+  }
   return idbRun('docs', 'readwrite', (s) => s.put(doc, `${coll}/${id}`));
 }
 

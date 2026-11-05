@@ -4,13 +4,15 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+import { CHROME, CHROME_ARGS } from './browser.js';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function openPhone({ width = 360, height = 800, port = 9334 } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'nh-ui-'));
-  const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
+  const chrome = spawn(CHROME, [...CHROME_ARGS, '--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
 
+  let launchError = null;
+  chrome.on('error', (error) => { launchError = error; });
   let wsUrl = null;
   for (let i = 0; i < 60 && !wsUrl; i++) {
     try {
@@ -19,6 +21,7 @@ export async function openPhone({ width = 360, height = 800, port = 9334 } = {})
     } catch {
       // Chrome is still starting.
     }
+    if (launchError) throw launchError;
     if (!wsUrl) await sleep(250);
   }
   if (!wsUrl) throw new Error('Chrome did not start');
@@ -77,7 +80,7 @@ export async function openPhone({ width = 360, height = 800, port = 9334 } = {})
     },
     /** The centre of an element on the screen. */
     async centre(selector, index = 0) {
-      const box = await evaluate(`const el = document.querySelectorAll(${JSON.stringify(selector)})[${index}]; if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height };`);
+      const box = await evaluate(`const el = document.querySelectorAll(${JSON.stringify(selector)})[${index}]; if (!el) return null; el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'}); const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height };`);
       if (!box) throw new Error(`nothing on screen for ${selector}`);
       return box;
     },

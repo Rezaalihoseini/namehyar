@@ -10,6 +10,7 @@ import { letterFromExactPdf } from './import-pdf-exact.js';
 import { blocksToHtml, serializeEditor } from './editor.js';
 import { mediaUrl, putMedia } from './store.js';
 import { toFaDigits } from './text.js';
+import { recoverZeroAdvanceSpace } from './pdf-spacing.js';
 
 const MM_PER_TWIP = 1 / 56.6929;
 const MAX_IMAGE_SIDE = 1600;
@@ -369,6 +370,18 @@ async function readPage(pdfjs, page, { useActualText = true } = {}) {
   // Left as they are, the joined shapes of the letters still say where half-spaces stood.
   const content = await page.getTextContent({ disableNormalization: true, includeMarkedContent: true });
   const fontInfo = (it) => (page.commonObjs.has(it.fontName) ? page.commonObjs.get(it.fontName) : null);
+  const advancesByFont = new Map();
+  let currentFont = null;
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    if (ops.fnArray[i] === pdfjs.OPS.setFont) currentFont = ops.argsArray[i][0];
+    if (ops.fnArray[i] !== pdfjs.OPS.showText || !currentFont) continue;
+    if (!advancesByFont.has(currentFont)) advancesByFont.set(currentFont, new Map());
+    const advances = advancesByFont.get(currentFont);
+    const matrix = fontInfo({ fontName: currentFont })?.fontMatrix?.[0] || 0.001;
+    for (const glyph of ops.argsArray[i][0]) {
+      if (glyph && typeof glyph === 'object' && typeof glyph.unicode === 'string' && [...glyph.unicode].length === 1) advances.set(glyph.unicode, Math.abs(matrix) * glyph.width);
+    }
+  }
   const rawName = (info) => (info?.name || '').replace(/^[A-Z]{6}\+/, '');
   const plainFonts = new Set();
   for (const it of content.items) {
@@ -395,7 +408,7 @@ async function readPage(pdfjs, page, { useActualText = true } = {}) {
       return [left, left + (one.width || 0) * kx];
     });
     const x = Math.min(...spots.map((s) => s[0]));
-    const raw = entry.actual ?? it.str;
+    const raw = entry.actual ?? recoverZeroAdvanceSpace(it.str, it.width, Math.hypot(it.transform[0], it.transform[1]), advancesByFont.get(it.fontName));
     // The shapes drawn, as the file names them, still show which letters are joined.
     const drawn = [...entry.items.map((one) => one.str).join('')];
     pieces.push({ t, raw, drawn, actual: entry.actual !== undefined, x, y: t[5] * ky, w: Math.max(...spots.map((s) => s[1])) - x, markBefore: mark, ...fontOf(page, it.fontName, plainFonts) });

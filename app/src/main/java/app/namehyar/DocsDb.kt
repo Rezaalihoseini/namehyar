@@ -23,7 +23,9 @@ class DocsDb(context: Context) : SQLiteOpenHelper(context, "namehyar.db", null, 
             put("json", json)
             put("updated", System.currentTimeMillis())
         }
-        writableDatabase.insertWithOnConflict("docs", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        if (writableDatabase.insertWithOnConflict("docs", null, values, SQLiteDatabase.CONFLICT_REPLACE) == -1L) {
+            throw android.database.sqlite.SQLiteException("Could not save document")
+        }
     }
 
     fun get(coll: String, id: String): String? =

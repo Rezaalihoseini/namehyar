@@ -330,7 +330,7 @@ const TABS = [
 function wordMeasure() {
   const st = styleOf(app.letter, 'table');
   const context = document.createElement('canvas').getContext('2d');
-  context.font = `${st.size}pt "${st.font}", "B Nazanin", serif`;
+  context.font = `${st.size}pt "${st.font}", "B Nazanin", "Tinos", "Vazirmatn", serif`;
   return (text) => context.measureText(text).width / MM;
 }
 

@@ -1,6 +1,7 @@
 package app.namehyar
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -24,7 +25,6 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
-import android.window.OnBackInvokedDispatcher
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -32,7 +32,7 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 /** Hosts the app's pages, which ship inside the APK and are served from assets; nothing is loaded from the network. */
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
 
     lateinit var webView: WebView
         private set
@@ -81,12 +81,13 @@ class MainActivity : Activity() {
         webView.webChromeClient = ChromeClient()
         webView.addJavascriptInterface(NativeBridge(this), "NamehyarNative")
 
-        if (Build.VERSION.SDK_INT >= 33) {
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) { handleBack() }
-        }
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = handleBack()
+        })
 
-        if (savedInstanceState == null) webView.loadUrl("https://$HOST/index.html")
-        else webView.restoreState(savedInstanceState)
+        if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) {
+            webView.loadUrl("https://$HOST/index.html")
+        }
         receiveFile(intent)
     }
 
@@ -94,6 +95,13 @@ class MainActivity : Activity() {
         super.onNewIntent(intent)
         setIntent(intent)
         receiveFile(intent)
+    }
+
+    override fun onPause() {
+        // Each input already checkpoints through the synchronous SQLite bridge.
+        // Also flush any active page/editor work when Android backgrounds us.
+        webView.evaluateJavascript("window.__flushDraft && window.__flushDraft()", null)
+        super.onPause()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -181,12 +189,6 @@ class MainActivity : Activity() {
         webView.evaluateJavascript("window.__onBack ? window.__onBack() : false") { result ->
             if (result != "true") finish()
         }
-    }
-
-    @Deprecated("Used below API 33 only")
-    @Suppress("DEPRECATION")
-    override fun onBackPressed() {
-        handleBack()
     }
 
     /** Runs window.__nativeDone(id, ok, data) in the page, which settles the waiting promise. */

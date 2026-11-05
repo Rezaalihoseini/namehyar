@@ -2036,17 +2036,27 @@ function openCellEditor(table, { r, c }) {
   const textOf = (p) => (p.runs || []).map((run) => run.text || '').join('');
   const many = cell.paras.length > 1;
   const value = cell.paras.map(textOf).join('\n');
+  const original = clone(cell);
+  let lastValue = value;
+  let remembered = false;
   const next = cellAfter(table, { r, c });
   const field = many ? h('textarea', { class: 'textarea', value }) : h('input', { class: 'input', value, enterkeyhint: next ? 'next' : 'done' });
   const save = () => {
     const lines = field.value.split('\n');
     // A word set apart keeps its look as long as the words stay as they were.
-    if (field.value !== value) {
-      change(() => {
+    if (field.value !== lastValue) {
+      if (!remembered) { remember(); remembered = true; }
+      if (field.value === value) {
+        cell.paras = clone(original.paras);
+        if (original.borders) cell.borders = clone(original.borders);
+        else delete cell.borders;
+      } else {
         fillCell(table, r, cell, lines);
-        if (selection?.word) selection = { ...selection, word: undefined };
-        syncBodyHtml();
-      });
+      }
+      if (selection?.word) selection = { ...selection, word: undefined };
+      syncBodyHtml();
+      saveLetter();
+      lastValue = field.value;
     }
   };
   const done = () => {
@@ -2065,6 +2075,7 @@ function openCellEditor(table, { r, c }) {
       'div',
       { class: 'form-grid' },
       field,
+      h('p', { class: 'note', style: { margin: 0 } }, 'تغییرات این خانه هنگام نوشتن ذخیره می‌شود.'),
       h(
         'div',
         { class: 'hex-row' },
@@ -2072,7 +2083,9 @@ function openCellEditor(table, { r, c }) {
         next && h('button', { class: 'btn', onClick: goNext }, 'خانهٔ بعدی'),
       ),
     ),
+    { onClose: () => { save(); render(); } },
   );
+  field.addEventListener('input', save);
   if (!many) {
     field.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' || e.isComposing) return;
@@ -2111,21 +2124,35 @@ function editSelectionText() {
   const inputs = fields.map((f) => (f.multi
     ? h('textarea', { class: 'textarea', value: f.value || '' })
     : h('input', { class: 'input', value: f.value || '' })));
+  let remembered = false;
+  const save = (trim = false) => {
+    const values = inputs.map((input) => trim ? input.value.trim() : input.value);
+    if (!values.some((value, i) => value !== (fields[i].value || ''))) return;
+    if (!remembered) { remember(); remembered = true; }
+    fields.forEach((field, i) => {
+      field.set(values[i]); field.value = values[i];
+      if (trim) inputs[i].value = values[i];
+    });
+    saveLetter();
+  };
   const close = openSheet(
     'ویرایش متن',
     h(
       'div',
       { class: 'form-grid' },
       fields.map((f, i) => h('label', null, h('div', { class: 'mini-label' }, f.label), inputs[i])),
+      h('p', { class: 'note', style: { margin: 0 } }, 'تغییرات هنگام نوشتن ذخیره می‌شود.'),
       h('button', {
         class: 'btn primary',
         onClick: () => {
-          change(() => fields.forEach((f, i) => f.set(inputs[i].value.trim())));
+          save(true);
           close();
         },
       }, 'تأیید'),
     ),
+    { onClose: () => { save(); render(); } },
   );
+  inputs.forEach((input) => input.addEventListener('input', () => save()));
   inputs[0].focus();
 }
 
@@ -2137,12 +2164,17 @@ function toolBtn(name, label, fn, attrs = {}) {
 
 const SEP = () => h('span', { class: 'sep' });
 
+let moveStep = 1;
 function nudgeButtons() {
+  const step = h('select', { class: 'input move-step', 'aria-label': 'گام جابه‌جایی', onChange: (event) => { moveStep = Number(event.target.value); } },
+    [0.25, 1, 5].map((value) => h('option', { value: String(value) }, `${toFaDigits(value)} میلی‌متر`)));
+  step.value = String(moveStep);
   return [
-    toolBtn('up', 'جابه‌جایی به بالا', () => nudge(0, -1)),
-    toolBtn('down', 'جابه‌جایی به پایین', () => nudge(0, 1)),
-    toolBtn('right', 'جابه‌جایی به راست', () => nudge(1, 0)),
-    toolBtn('left', 'جابه‌جایی به چپ', () => nudge(-1, 0)),
+    toolBtn('up', 'جابه‌جایی به بالا', () => nudge(0, -moveStep)),
+    toolBtn('down', 'جابه‌جایی به پایین', () => nudge(0, moveStep)),
+    toolBtn('right', 'جابه‌جایی به راست', () => nudge(moveStep, 0)),
+    toolBtn('left', 'جابه‌جایی به چپ', () => nudge(-moveStep, 0)),
+    step,
   ];
 }
 

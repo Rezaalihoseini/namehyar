@@ -1,6 +1,6 @@
 import { h, uid, toast } from '../util.js';
 import { icon } from '../icons.js';
-import { app, backButton, confirmSheet, deleteRecipient, deleteTemplate, openSheet, saveRecipient, saveSettings, segmented, setTheme, withBusy } from '../app.js';
+import { app, applyTheme, backButton, confirmSheet, deleteRecipient, deleteTemplate, openSheet, saveRecipient, saveSettings, segmented, setTheme, withBusy } from '../app.js';
 import { ensureMedia, mediaUrl, putMedia } from '../store.js';
 import { importImage, pickImageFile, removePaper } from '../image.js';
 import { FONTS } from '../model.js';
@@ -85,6 +85,12 @@ function themeGroup() {
       app.settings.theme || 'system',
       setTheme,
     ),
+    h('div', { class: 'mini-label' }, 'اندازهٔ نوشته‌های رابط'),
+    segmented([{ id: 'normal', label: 'معمولی' }, { id: 'large', label: 'درشت' }], app.settings.uiSize || 'normal', (size) => {
+      app.settings.uiSize = size;
+      applyTheme();
+      saveSettings();
+    }),
   );
 }
 

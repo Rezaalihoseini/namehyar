@@ -132,6 +132,8 @@ try {
   await shot('07-body-selected');
 
   /* ---------- Each paragraph on its own ---------- */
+  // Select before dragging: an unselected touch on a scrollable page scrolls it.
+  await page.tapOn('#page [data-section="body:1"]');
   const second = await page.centre('#page [data-section="body:1"]');
   const firstTop = await page.evaluate(`return document.querySelector('#page [data-section="body:0"]').getBoundingClientRect().top;`);
   await page.drag(second.x, second.y, second.x, second.y + 25);

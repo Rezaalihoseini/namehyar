@@ -6,10 +6,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const [url, out] = process.argv.slice(2);
-const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+import { CHROME, CHROME_ARGS } from './browser.js';
 const PORT = 9333;
 const profile = mkdtempSync(join(tmpdir(), 'nh-'));
-const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
+const chrome = spawn(CHROME, [...CHROME_ARGS, '--headless=new', '--disable-gpu', '--no-first-run', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

@@ -25,7 +25,13 @@ class NativeBridge(private val activity: MainActivity) {
     private fun mediaFile(id: String) = File(mediaDir, File(id).name)
 
     @JavascriptInterface
-    fun dbPut(coll: String, id: String, json: String) = db.put(coll, id, json)
+    fun dbPut(coll: String, id: String, json: String): Boolean = try {
+        db.put(coll, id, json)
+        true
+    } catch (error: Exception) {
+        Log.e("Namehyar", "Could not save document", error)
+        false
+    }
 
     @JavascriptInterface
     fun dbGet(coll: String, id: String): String? = db.get(coll, id)
