@@ -1,0 +1,13 @@
+@font-face { font-family: "Vazirmatn"; src: url(../fonts/Vazirmatn-wght.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+
+@font-face { font-family: "B Nazanin"; src: url(../fonts/BNazanin.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: "B Nazanin"; src: url(../fonts/BNaznnBd.ttf) format("truetype"); font-weight: 700; }
+@font-face { font-family: "B Titr"; src: url(../fonts/BTitrBd.ttf) format("truetype"); font-weight: 400 700; }
+@font-face { font-family: "B Lotus"; src: url(../fonts/BLotus.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: "B Lotus"; src: url(../fonts/BLotusBd.ttf) format("truetype"); font-weight: 700; }
+@font-face { font-family: "B Zar"; src: url(../fonts/BZar.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: "B Zar"; src: url(../fonts/BZarBd.ttf) format("truetype"); font-weight: 700; }
+
+/* The B fonts have no Latin letters. Tinos has the same metrics as Times New Roman, the Latin font in the Word export. */
+@font-face { font-family: "Tinos"; src: url(../fonts/tinos-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "Tinos"; src: url(../fonts/tinos-latin-700-normal.woff2) format("woff2"); font-weight: 700; }

@@ -1,0 +1,62 @@
+/* The A4 page. All sizes are in real units so the screen, the PDF and the Word export agree. */
+.page {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  direction: rtl;
+  background: #fff;
+  color: #000;
+  font-family: "B Nazanin", "Tinos", "Vazirmatn", serif;
+}
+
+/* Letterhead parts sit freely on the page, above the text so they can always be grabbed. */
+.pg-parts { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 2; pointer-events: none; }
+.hd-part { position: absolute; white-space: pre-wrap; pointer-events: auto; }
+.hd-logo img { display: block; width: 100%; height: 100%; }
+.hd-rule { height: 0; border-top: .75pt solid #000; }
+.hd-footer { padding-top: 1mm; border-top: .5pt solid #000; }
+.hd-footer.no-line { border-top: 0; }
+
+.pg-body { position: absolute; }
+/* Pictures set behind the text, such as a scanned page or a watermark. */
+.pg-under { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; }
+
+.pg-objects { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 3; pointer-events: none; }
+.obj { position: absolute; pointer-events: auto; }
+.obj img { display: block; width: 100%; height: 100%; }
+.obj-text { white-space: pre-wrap; }
+.obj-text.framed { padding: 1.5mm; border: .75pt solid #000; }
+/* A line taken exactly from a file stays one line, whatever is typed into it. */
+.obj-exact { white-space: pre; }
+.obj-exact.obj-flow { white-space: pre-wrap; }
+.ink-text { display: none; }
+.ink { position: absolute; top: 0; left: 0; width: 1pt; height: 1pt; overflow: visible; pointer-events: none; direction: ltr; unicode-bidi: bidi-override; white-space: pre; font-kerning: none; font-variant-ligatures: none; text-rendering: geometricPrecision; }
+
+.blk { position: relative; white-space: pre-wrap; text-decoration-skip-ink: none; }
+.blk.moved { z-index: 4; }
+.tbl-wrap table { width: 100%; table-layout: fixed; border-collapse: collapse; direction: rtl; }
+.tbl-wrap td { padding: 0 1.5mm; border: .5pt solid #000; vertical-align: middle; }
+.tbl-wrap.no-border td { border: 0; }
+.tbl-wrap .cell-p { white-space: pre-wrap; }
+.sign-col { text-align: center; }
+.inline-img { vertical-align: bottom; }
+
+.ph-mark { background: #ffe9a8; border-radius: 2px; }
+
+/* Layout-only host used to measure blocks at their true size. It is clipped, not moved off-screen:
+   anything far to the left of a right-to-left page becomes scrollable. */
+.measure-clip { position: fixed; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; visibility: hidden; }
+.measure-host { width: 170mm; direction: rtl; }
+
+#print-root { display: none; }
+
+@page { size: A4; margin: 0; }
+
+@media print {
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  body > *:not(#print-root) { display: none !important; }
+  #print-root { display: block !important; }
+  #print-root .page { break-after: page; }
+  #print-root .page:last-child { break-after: auto; }
+}

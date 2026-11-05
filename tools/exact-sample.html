@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Exact sample</title>
+<!-- A made-up page laid out by hand, on paper that is not A4: two columns, a picture, a rule, a turned label, see-through words
+     and a word covered by a box. tools/ui-test-exact.js turns it into a PDF and passes it through the app. -->
+<style>
+  @font-face { font-family: "Sample"; src: url(/app/src/main/assets/web/fonts/Vazirmatn-Regular.ttf); }
+  @font-face { font-family: "Sample"; font-weight: 700; src: url(/app/src/main/assets/web/fonts/Vazirmatn-Bold.ttf); }
+  @page { size: 240mm 170mm; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font: 10pt/1.5 "Sample"; color: #000; }
+  .sheet { position: relative; width: 240mm; height: 170mm; overflow: hidden; page-break-after: always; }
+  .sheet:last-child { page-break-after: auto; }
+  .head { position: absolute; right: 12mm; left: 12mm; top: 10mm; font-size: 20pt; font-weight: 700; line-height: 1.3; }
+  .rule { position: absolute; right: 12mm; left: 12mm; top: 24mm; border-top: 1pt solid #000; }
+  .col { position: absolute; top: 28mm; width: 100mm; text-align: justify; text-align-last: right; }
+  .a { right: 12mm; }
+  .b { left: 12mm; }
+  .pic { position: absolute; left: 12mm; top: 80mm; width: 60mm; }
+  .note { position: absolute; right: 12mm; top: 110mm; width: 100mm; background: #e8e8e8; padding: 2mm; }
+  .turned { position: absolute; left: 80mm; top: 130mm; transform: rotate(-20deg); font-weight: 700; }
+  .faint { position: absolute; right: 12mm; top: 140mm; opacity: .4; }
+  .under { position: absolute; left: 12mm; top: 150mm; }
+  .cover { position: absolute; left: 10mm; top: 148mm; width: 40mm; height: 8mm; background: #333; }
+  .latin { position: absolute; right: 12mm; bottom: 8mm; direction: ltr; }
+  .veiled { position: absolute; left: 80mm; top: 150mm; }
+  .veil { position: absolute; left: 78mm; top: 148mm; width: 45mm; height: 9mm; background: #000; opacity: .05; }
+  .red { color: #c00000; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="head">عنوان نمونه‌ای برای صفحهٔ دقیق</div>
+  <div class="rule"></div>
+  <div class="col a">این پاراگراف نمونه در ستون راست نوشته شده و سطرهایش از دو طرف تراز است. کلمهٔ <span class="red">قرمز</span> رنگ خودش را دارد، عدد ۱۴۰۵/۰۷/۲۱ و عبارت (داخل پرانتز) هم باید درست بمانند. این جمله برای پر کردن سطر چند بار تکرار می‌شود تا ستون بلند شود و نیم‌فاصله‌ها هم دیده شوند.</div>
+  <div class="col b">این متن در ستون چپ است و نباید با ستون راست قاطی شود. هر سطر باید جای خودش بماند و هر کلمه قابل انتخاب باشد. Latin words stay in their own order here.</div>
+  <img class="pic" src="test-image.png" alt="">
+  <div class="note">متن روی کادر خاکستری که رنگ زمینه‌اش جزو تصویر پشت صفحه است.</div>
+  <div class="turned">نوشتهٔ کج</div>
+  <div class="faint">نوشتهٔ کم‌رنگ</div>
+  <div class="under">زیر کادر پنهان</div>
+  <div class="cover"></div>
+  <div class="veiled">متن زیر پرده</div>
+  <div class="veil"></div>
+  <div class="latin">www.example.com - page 1</div>
+</div>
+<div class="sheet">
+  <div class="head">صفحهٔ دوم نمونه</div>
+  <div class="col a">سطر تنها در صفحهٔ دوم.</div>
+</div>
+</body>
+</html>

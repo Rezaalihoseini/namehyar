@@ -1,0 +1,18 @@
+.gradle/
+.idea/
+.kotlin/
+.claude/
+build/
+app/build/
+local.properties
+*.iml
+*.apk
+*.aab
+
+# Signing keys never go into the repository
+*.jks
+*.keystore
+keystore.properties
+
+# Test output
+ui-test-out/

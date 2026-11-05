@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<title>نامه‌یار</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/page.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="print-root"></div>
+<script>
+  // Plain script on purpose: on a very old Android System WebView the app's modules would not even parse.
+  (function () {
+    // Set before the first paint, so a dark theme never flashes white.
+    try {
+      if (localStorage.getItem('namehyar-dark') === '1') document.documentElement.dataset.theme = 'dark';
+    } catch (e) {}
+    var m = /Chrome\/(\d+)/.exec(navigator.userAgent);
+    if (m && +m[1] < 90) {
+      document.getElementById('app').innerHTML =
+        '<div style="padding:32px 20px;line-height:2;text-align:center">برای اجرای نامه‌یار، برنامهٔ <b>Android System WebView</b> را از فروشگاه برنامه به‌روزرسانی کنید و اپ را دوباره باز کنید.</div>';
+      window.__oldWebView = true;
+    }
+  })();
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

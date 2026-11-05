@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scanned page test</title>
+<style>@page { size: A4; margin: 0; } html, body { margin: 0; } img { display: block; width: 210mm; height: 296.5mm; }</style>
+</head>
+<body>
+<!-- A page that is only a picture, as a scanner makes it: tools/chrome-pdf.js prints it to a PDF with no text in it. -->
+<script>
+  const image = new URLSearchParams(location.search).get('image');
+  const img = new Image();
+  img.onload = () => {
+    document.title = 'pages:1';
+  };
+  img.src = image;
+  document.body.append(img);
+</script>
+</body>
+</html>

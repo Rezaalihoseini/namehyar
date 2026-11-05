@@ -1,0 +1,6 @@
+{
+  "name": "namehyar-tools",
+  "private": true,
+  "type": "module",
+  "description": "No dependencies. Lets the checks in tools/ import the app's ES modules with Node."
+}

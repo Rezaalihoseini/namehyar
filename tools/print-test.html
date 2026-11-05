@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Print test</title>
+<link rel="stylesheet" href="/app/src/main/assets/web/css/fonts.css">
+<link rel="stylesheet" href="/app/src/main/assets/web/css/page.css">
+</head>
+<body>
+<div id="print-root"></div>
+<style>html, body { margin: 0; padding: 0; } #print-root { display: block; }</style>
+<script type="module">
+  // Renders the same sample letter as tools/make-docx.js with the real page engine,
+  // so the app's PDF can be compared with what Word makes of the .docx.
+  import { sampleLetter } from '/tools/sample-letter.js';
+  import { layoutLetter } from '/app/src/main/assets/web/js/render.js';
+  import { putMedia } from '/app/src/main/assets/web/js/store.js';
+
+  const params = new URLSearchParams(location.search);
+  const png = await fetch('/tools/test-image.png').then((r) => r.blob());
+  const url = await new Promise((resolve) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.readAsDataURL(png);
+  });
+  await putMedia('logo', url);
+  await putMedia('sig', url);
+  await Promise.all(['400 14pt "B Nazanin"', '700 14pt "B Nazanin"', '700 14pt "B Titr"'].map((f) => document.fonts.load(f, 'سلام')));
+  await Promise.all(['400 14pt "Tinos"', '700 14pt "Tinos"'].map((f) => document.fonts.load(f, 'Abc')));
+  const letter = sampleLetter({ long: params.has('long'), images: params.has('images'), moved: params.has('moved') });
+  const { pages, total } = layoutLetter(letter, { preview: false });
+  document.getElementById('print-root').append(...pages);
+  document.title = `pages:${total}`;
+</script>
+</body>
+</html>
